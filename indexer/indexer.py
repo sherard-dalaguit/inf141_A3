@@ -3,7 +3,7 @@ import json
 import pickle
 from collections import defaultdict
 from typing import Dict, List
-from indexer.utils import tokenize, stem, extract_text
+from utils import tokenize, stem, extract_text
 
 DOC_ID_MAP: Dict[str, int] = {}
 INVERTED_INDEX: Dict[str, List[Dict[str, int]]] = defaultdict(list)
@@ -75,11 +75,32 @@ def serialize_index(output_dir: str):
 	Args:
 		output_dir (str): The directory where the serialized index will be saved.
 	"""
+	if not os.path.exists(output_dir):
+		os.makedirs(output_dir)
+
 	index_path = os.path.join(output_dir, 'inverted_index.pkl')
 	with open(index_path, 'wb') as file:
 		pickle.dump(INVERTED_INDEX, file)
 
 	index_size = os.path.getsize(index_path) / 1024  # size in kilobytes
-	print(f"Total documents: {DOCUMENT_COUNT}")
-	print(f"Total unique tokens: {len(UNIQUE_TOKENS)}")
-	print(f"Index size: {index_size:.2f} KB")
+
+	# generate index statistics for report
+	report_lines = []
+	report_lines.append(f"Total documents: {DOCUMENT_COUNT}")
+	report_lines.append(f"Total unique tokens: {len(UNIQUE_TOKENS)}")
+	report_lines.append(f"Index size: {index_size:.2f} KB")
+
+	report = "\n".join(report_lines)
+	report_path = os.path.join(output_dir, 'report.txt')
+	with open(report_path, 'w') as file:
+		file.write(report)
+
+	print(f"Report saved to: {report_path}")
+
+
+if __name__ == "__main__":
+	data_dir = os.path.join(os.path.dirname(__file__), '..', 'DEV')
+	output_dir = os.path.join(os.path.dirname(__file__), '..', 'index')
+
+	traverse_data_directory(data_dir)
+	serialize_index(output_dir)

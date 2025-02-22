@@ -1,10 +1,85 @@
-# this file will contain code that reads & processes the data, and builds the inverted index
-# TODO: create a doc_id_map to assign each file/document a numeric ID
-# TODO: traverse the DEV data directory and read each HTML/JSON file
-# TODO: parse each file's content (clean HTML, tokenize, stem, etc.) using helper functions from utils.py
-# TODO: update the in-memory inverted index with the tokens for each document
-# TODO: track how many documents are processed
-# TODO: track how many unique tokens have been encountered
-# TODO: (optional) for large datasets, write partial indexes to disk and merge them later
-# TODO: after building the full index, serialize it to disk in the index/ directory
-# TODO: compute and print the total size of the index on disk
+import os
+import json
+import pickle
+from collections import defaultdict
+from typing import Dict, List
+from indexer.utils import tokenize, stem, extract_text
+
+DOC_ID_MAP: Dict[str, int] = {}
+INVERTED_INDEX: Dict[str, List[Dict[str, int]]] = defaultdict(list)
+DOCUMENT_COUNT: int = 0
+UNIQUE_TOKENS = set()
+
+
+def traverse_data_directory(data_dir: str):
+	"""
+	Traverses the DEV data directory and processes each file to build the inverted index.
+
+	Args:
+		data_dir (str): The path to the data directory containing the files to be indexed.
+	"""
+	global DOCUMENT_COUNT
+	for root, _, files in os.walk(data_dir):
+		for file in files:
+			if file.endswith('.json'):
+				file_path = os.path.join(root, file)
+				doc_id = len(DOC_ID_MAP)
+				process_file_content(file_path, doc_id)
+				DOCUMENT_COUNT += 1
+
+
+def process_file_content(file_path: str, doc_id: int):
+	"""
+	Processes the content of a file, extracts text, tokenizes, stems, and updates the inverted index.
+
+	Args:
+		file_path (str): The path to the file to be processed.
+		doc_id (int): The document ID assigned to the file.
+	"""
+	with open(file_path, 'r', encoding='utf-8') as file:
+		if file_path.endswith('.json'):
+			data = json.load(file)
+			content = data.get('content', '')
+			text = extract_text(content)
+
+		# maps the document URL to the document ID
+		document_url = data["url"]
+		DOC_ID_MAP[document_url] = doc_id
+
+		tokens = tokenize(text)
+		stemmed_tokens = stem(tokens)
+		update_inverted_index(stemmed_tokens, doc_id)
+
+
+def update_inverted_index(tokens: List[str], doc_id: int):
+	"""
+	Updates the in-memory inverted index with the tokens from a document.
+
+	Args:
+		tokens (List[str]): The list of tokens extracted from the document.
+		doc_id (int): The document ID of the document being processed.
+	"""
+	term_freq = defaultdict(int)
+	for token in tokens:
+		term_freq[token] += 1
+		UNIQUE_TOKENS.add(token)
+
+	for token, freq in term_freq.items():
+		INVERTED_INDEX[token].append({'doc_id': doc_id, 'term_freq': freq})
+
+
+def serialize_index(output_dir: str):
+	"""
+	Serializes the inverted index to disk and prints index statistics.
+
+	Args:
+		output_dir (str): The directory where the serialized index will be saved.
+	"""
+	index_path = os.path.join(output_dir, 'inverted_index.pkl')
+	with open(index_path, 'wb') as file:
+		pickle.dump(INVERTED_INDEX, file)
+
+	index_size = os.path.getsize(index_path) / 1024  # size in kilobytes
+	print(f"Total documents: {DOCUMENT_COUNT}")
+	print(f"Total unique tokens: {len(UNIQUE_TOKENS)}")
+	print(f"Index size: {index_size:.2f} KB")

@@ -1,0 +1,3 @@
+Total documents: 55393
+Total unique tokens: 1138713
+Index size: 178623.97 KB

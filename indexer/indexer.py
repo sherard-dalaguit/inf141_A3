@@ -9,6 +9,12 @@ DOC_ID_MAP: Dict[str, int] = {}
 INVERTED_INDEX: Dict[str, List[Dict[str, int]]] = defaultdict(list)
 DOCUMENT_COUNT: int = 0
 UNIQUE_TOKENS = set()
+PARTIAL_INDEX_DIR = os.path.join(os.path.dirname(__file__), '..', 'index', 'partials')
+FINAL_INDEX_PATH = os.path.join(os.path.dirname(__file__), '..', 'index', 'inverted_index.pkl')
+DOC_MAP_PATH = os.path.join(os.path.dirname(__file__), '..', 'index', 'doc_id_map.json')
+
+BATCH_SIZE = 500  # disk dump every 500 docs
+partial_index_count = 0  # tracks partial index counts
 
 
 def traverse_data_directory(data_dir: str):
@@ -26,7 +32,9 @@ def traverse_data_directory(data_dir: str):
 				doc_id = len(DOC_ID_MAP)
 				process_file_content(file_path, doc_id)
 				DOCUMENT_COUNT += 1
-
+				if DOCUMENT_COUNT % BATCH_SIZE == 0:
+					save_partial_index()
+					INVERTED_INDEX.clear()  # Clear memory
 
 def process_file_content(file_path: str, doc_id: int):
 	"""
@@ -68,13 +76,50 @@ def update_inverted_index(tokens: List[str], doc_id: int):
 		INVERTED_INDEX[token].append({'doc_id': doc_id, 'term_freq': freq})
 
 
-def serialize_index(output_dir: str):
-	"""
-	Serializes the inverted index to disk and prints index statistics.
+def save_partial_index():
+    global partial_index_count
+    if not os.path.exists(PARTIAL_INDEX_DIR):
+        os.makedirs(PARTIAL_INDEX_DIR)
+    
+    file_path = os.path.join(PARTIAL_INDEX_DIR, f'partial_index_{partial_index_count}.pkl')
+    with open(file_path, 'wb') as file:
+        pickle.dump(INVERTED_INDEX, file)
+    
+    partial_index_count += 1
 
-	Args:
-		output_dir (str): The directory where the serialized index will be saved.
-	"""
+def merge_indexes():
+    """Merges all partial indexes into a final inverted index."""
+    merged_index = defaultdict(list)
+    
+    for file_name in sorted(os.listdir(PARTIAL_INDEX_DIR)):
+        file_path = os.path.join(PARTIAL_INDEX_DIR, file_name)
+        with open(file_path, 'rb') as file:
+            partial_index = pickle.load(file)
+            for term, postings in partial_index.items():
+                merged_index[term].extend(postings)
+    
+    # Save final merged index
+    with open(FINAL_INDEX_PATH, 'wb') as file:
+        pickle.dump(merged_index, file)
+
+    # Save document ID mapping
+    with open(DOC_MAP_PATH, 'w') as file:
+        json.dump(DOC_ID_MAP, file)
+
+if __name__ == "__main__":
+    data_dir = os.path.join(os.path.dirname(__file__), '..', 'DEV')
+    traverse_data_directory(data_dir)
+    save_partial_index()  # Save any remaining data
+    merge_indexes()
+
+"""
+def serialize_index(output_dir: str):
+
+	#Serializes the inverted index to disk and prints index statistics.
+
+	#Args:
+	#	output_dir (str): The directory where the serialized index will be saved.
+	
 	if not os.path.exists(output_dir):
 		os.makedirs(output_dir)
 
@@ -104,3 +149,4 @@ if __name__ == "__main__":
 
 	traverse_data_directory(data_dir)
 	serialize_index(output_dir)
+"""

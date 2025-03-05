@@ -38,7 +38,7 @@ def compute_tf_idf(term, postings, doc_frequencies, total_docs):
     
     for entry in postings:
         doc_id = entry.get("doc_id")
-        term_count = entry.get("count", 0)  # Use 0 if 'count' is missing
+        term_count = entry.get("term_freq", 0)  # Use 0 if 'term_freq' is missing
         
         if term_count > 0:
             tf = 1 + log(term_count)  # Term Frequency (TF)
@@ -50,42 +50,55 @@ def compute_tf_idf(term, postings, doc_frequencies, total_docs):
     return scores
 
 
-
-def search(query):
-    """Handles ranked search using TF-IDF scoring."""
-    index = load_index()
-    doc_map = load_doc_map()
+def search(query, index, doc_map):
+    """Handles ranked search using TF-IDF scoring using preloaded index and doc_map."""
     total_docs = len(doc_map)
-    
+
     if not index or not doc_map:
         return []
-    
+
     query_tokens = stem(tokenize(query))
-    doc_scores = {}
-    doc_frequencies = {term: len(index.get(term, [])) for term in query_tokens}
-    
+    if not query_tokens:
+        return []
+
+    # For each token, get the set of doc IDs that contain it
+    postings_sets = []
     for token in query_tokens:
         if token in index:
-            term_scores = compute_tf_idf(token, index[token], doc_frequencies, total_docs)
-            for doc_id, score in term_scores.items():
-                doc_scores[doc_id] = doc_scores.get(doc_id, 0) + score  # Accumulate scores
-    
-    ranked_results = sorted(doc_scores.items(), key=lambda x: x[1], reverse=True)[:5]
+            doc_ids = {entry["doc_id"] for entry in index[token]}
+            postings_sets.append(doc_ids)
+        else:
+            return []
 
-    # Debugging: Print found doc_ids before mapping
+    valid_doc_ids = set.intersection(*postings_sets) if postings_sets else set()
+    if not valid_doc_ids:
+        return []
+
+    doc_scores = {doc_id: 0 for doc_id in valid_doc_ids}
+    doc_frequencies = {term: len(index.get(term, [])) for term in query_tokens}
+
+    for token in query_tokens:
+        if token in index:
+            filtered_postings = [entry for entry in index[token] if entry["doc_id"] in valid_doc_ids]
+            term_scores = compute_tf_idf(token, filtered_postings, doc_frequencies, total_docs)
+            for doc_id, score in term_scores.items():
+                doc_scores[doc_id] += score  # Accumulate scores
+
+    ranked_results = sorted(doc_scores.items(), key=lambda x: x[1], reverse=True)[:5]
     print(f"Retrieved doc_ids for query '{query}':", [doc_id for doc_id, _ in ranked_results])
 
-    # Ensure doc_id lookup matches data type
     return [doc_map.get(str(doc_id), f"Unknown URL for doc_id {doc_id}") for doc_id, _ in ranked_results]
 
 
 if __name__ == "__main__":
+    index = load_index()
+    doc_map = load_doc_map()
     while True:
         query = input("Enter a query (or type 'stop' to exit): ")
         if query.lower() == 'stop':
             break
         
-        results = search(query)
+        results = search(query, index, doc_map)
         print(f"Top results for '{query}':")
         for url in results:
             print(url)

@@ -8,3 +8,5 @@ python index.py
 python search.py
 
 The first command will create and populate the index, and the second command will test the search queries.
+
+# Assignment 3 - Milestone 3

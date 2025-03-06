@@ -10,3 +10,8 @@ python search.py
 The first command will create and populate the index, and the second command will test the search queries.
 
 # Assignment 3 - Milestone 3
+Use the following commands:
+python indexer.py
+python search.py
+
+The first command creates and populates the index, while the second command loads the index and allows users to query it for ranked search results. 

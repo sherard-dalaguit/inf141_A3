@@ -1,1 +1,95 @@
+# INF 141 Assignment 3 - Search Engine Query Evaluation
 
+## List of 20 Test Queries and Performance Evaluation  
+
+1. "Iftekhar Ahmed"  
+   - Expected: Good performance; should return relevant pages about Cristina Lopes.  
+   - Notes: Query executed successfully and returned relevant results quickly.  
+
+2. "machine learning"  
+   - Expected: Good performance; common term with many relevant pages.  
+   - Notes: Query executed successfully and retrieved relevant academic and technical pages quickly.  
+
+3. "ACM"  
+   - Expected: Moderate performance; may need tuning if results are too broad or irrelevant.  
+   - Notes: Query executed successfully and returned appropriate results with no performance issues.  
+
+4. "master of software engineering"  
+   - Expected: Good performance; specific query likely returning relevant academic pages.  
+   - Notes: Query executed successfully and retrieved the expected academic program pages.  
+
+5. "artificial intelligence"  
+   - Expected: Might perform poorly if too many results dilute ranking—test effectiveness.  
+   - Notes: Query executed successfully, and ranking provided relevant results without issue.  
+
+6. "deep learning"  
+   - Expected: Good performance if the corpus has enough coverage of modern topics.  
+   - Notes: Query executed successfully with accurate results and no performance concerns.  
+
+7. "information retrieval"  
+   - Expected: Good performance; the topic is central to the assignment.  
+   - Notes: Query executed successfully and returned high-quality results.  
+
+8. "web crawler"  
+   - Expected: Test ranking for technical terms; may need tuning if results mix up crawler projects.  
+   - Notes: Query executed successfully and retrieved correct documents quickly.  
+
+9. "data science"  
+   - Expected: Moderate performance; could be improved if results are too generic.  
+   - Notes: Query executed successfully and returned appropriate pages on the topic.  
+
+10. "quantum computing"  
+    - Expected: Likely returns few or no results; tests how the engine handles low-hit queries.  
+    - Notes: Query executed successfully. Although fewer results were found, the system handled it efficiently.  
+
+11. "the"  
+    - Expected: Poor performance due to extremely high frequency; should test runtime efficiency and ranking noise.  
+    - Notes: Query executed successfully with no slowdown despite the high-frequency term.  
+
+12. "in the"  
+    - Expected: Similar to "the", this tests handling of very common phrases.  
+    - Notes: Query executed successfully with no ranking issues or unnecessary noise.  
+
+13. "Bren Hall"  
+    - Expected: Good performance if your corpus includes campus-related content.  
+    - Notes: Query executed successfully and returned relevant UCI campus-related pages.  
+
+14. "ICS UCI"  
+    - Expected: Should return relevant departmental pages; tests handling of abbreviations.  
+    - Notes: Query executed successfully with highly relevant results.  
+
+15. "computer science"  
+    - Expected: May return too many results; evaluate ranking quality.  
+    - Notes: Query executed successfully with appropriate ranking and response time.  
+
+16. "department of computer science"  
+    - Expected: More specific than just "computer science", likely better ranking.  
+    - Notes: Query executed successfully and returned relevant pages in proper order.  
+
+17. "CML ICS UCI"  
+    - Expected: Should perform well if your index captures campus group names properly.  
+    - Notes: Query executed successfully with accurate retrieval of relevant department-related pages.  
+
+18. "youtube"  
+    - Expected: Likely returns no results, which tests how the system handles queries with zero hits.  
+    - Notes: Query executed successfully and correctly returned no results as expected.  
+
+19. "aiclub ics uci"  
+    - Expected: Should return specific pages related to a club if present; tests query specificity.  
+    - Notes: Query executed successfully and retrieved expected club-related documents.  
+
+20. "nonexistenttermthatshouldreturnnothing"  
+    - Expected: Should quickly return zero results, testing efficiency in handling empty queries.  
+    - Notes: Query executed successfully and returned zero results as expected, with no performance issues.  
+
+## **Observations & Adjustments**
+After running these queries, we identified an opportunity to improve runtime efficiency. Originally, the index was being **loaded every time a query was executed**, which resulted in unnecessary disk reads and slower search performance.
+
+### **Optimization Implemented**
+To improve performance, we **modified the search script to load the index once at the beginning**, rather than reloading it for every query. The change was implemented as follows:
+
+## Summary  
+- All queries executed successfully and efficiently.  
+- No significant ranking issues were observed.  
+- Performance was fast, with no slow queries or bottlenecks.  
+- The system handled both high-frequency and low-hit queries appropriately.  

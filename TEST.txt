@@ -3,7 +3,7 @@
 ## List of 20 Test Queries and Performance Evaluation  
 
 1. "Iftekhar Ahmed"  
-   - Expected: Good performance; should return relevant pages about Cristina Lopes.  
+   - Expected: Good performance; should return relevant pages about Iftekhar Ahmed.  
    - Notes: Query executed successfully and returned relevant results quickly.  
 
 2. "machine learning"  

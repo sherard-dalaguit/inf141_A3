@@ -14,4 +14,4 @@ Use the following commands:
 python indexer/indexer.py
 python indexer/search.py
 
-The first command creates and populates the index, while the second command loads a local GUI that allows the user to query the index for ranked search results.
+The first command creates and populates the index, while the second command loads a local GUI that allows the user to query the index for ranked search results. In the GUI, simply type your query in the upmost text box and press the Search Button. The first query might take a second or two, but all other following queries will load instantly

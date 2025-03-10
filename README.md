@@ -11,7 +11,7 @@ The first command will create and populate the index, and the second command wil
 
 # Assignment 3 - Milestone 3
 Use the following commands:
-python indexer.py
-python search.py
+python indexer/indexer.py
+python indexer/search.py
 
 The first command creates and populates the index, while the second command loads a local GUI that allows the user to query the index for ranked search results.

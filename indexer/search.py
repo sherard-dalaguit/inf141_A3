@@ -1,8 +1,10 @@
 import os
 import pickle
 import json
+import tkinter as tk
 from utils import tokenize, stem
-from math import log, sqrt
+from math import log
+from tkinter import scrolledtext, messagebox
 
 INDEX_PATH = os.path.join(os.path.dirname(__file__), '..', 'index', 'inverted_index.pkl')
 DOC_MAP_PATH = os.path.join(os.path.dirname(__file__), '..', 'index', 'doc_id_map.json')
@@ -90,16 +92,58 @@ def search(query, index, doc_map):
     return [doc_map.get(str(doc_id), f"Unknown URL for doc_id {doc_id}") for doc_id, _ in ranked_results]
 
 
+class SearchGUI(tk.Tk):
+    def __init__(self, index, doc_map):
+        super().__init__()
+        self.title("IN4MATX 141 Search Engine")
+        self.geometry("600x400")
+        self.index = index
+        self.doc_map = doc_map
+        self.create_widgets()
+
+    def create_widgets(self):
+        self.label = tk.Label(self, text="Enter your query (or type 'stop' to exit):")
+        self.label.pack(pady=10)
+
+        self.query_entry = tk.Entry(self, width=50)
+        self.query_entry.pack(pady=5)
+
+        self.search_button = tk.Button(self, text="Search", command=self.perform_search)
+        self.search_button.pack(pady=5)
+
+        self.results_box = scrolledtext.ScrolledText(self, wrap=tk.WORD, width=70, height=15)
+        self.results_box.pack(pady=10)
+
+    def perform_search(self):
+        """
+        Executes the search query entered by the user and displays the results.
+
+        This function retrieves the query from the input field, performs the search
+        using the preloaded index and document map, and displays the top results
+        in the results box. If the query is 'stop', the application will close.
+
+        Raises:
+            messagebox.showwarning: If the query is empty.
+        """
+        query = self.query_entry.get().strip()
+        if query.lower() == 'stop':
+            self.destroy()
+            return
+        if not query:
+            messagebox.showwarning("Empty Query", "Please enter a query.")
+            return
+        results = search(query, self.index, self.doc_map)
+        self.results_box.delete("1.0", tk.END)
+        if results:
+            self.results_box.insert(tk.END, f"Top Results for {query}:\n")
+            for index, url in enumerate(results):
+                self.results_box.insert(tk.END, f"{index + 1}) " + url + "\n")
+        else:
+            self.results_box.insert(tk.END, "No results found.")
+
+
 if __name__ == "__main__":
     index = load_index()
     doc_map = load_doc_map()
-    while True:
-        query = input("Enter a query (or type 'stop' to exit): ")
-        if query.lower() == 'stop':
-            break
-        
-        results = search(query, index, doc_map)
-        print(f"Top results for '{query}':")
-        for url in results:
-            print(url)
-        print()
+    app = SearchGUI(index, doc_map)
+    app.mainloop()

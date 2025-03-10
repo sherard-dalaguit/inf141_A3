@@ -14,4 +14,4 @@ Use the following commands:
 python indexer.py
 python search.py
 
-The first command creates and populates the index, while the second command loads the index and allows users to query it for ranked search results. 
+The first command creates and populates the index, while the second command loads a local GUI that allows the user to query the index for ranked search results.
